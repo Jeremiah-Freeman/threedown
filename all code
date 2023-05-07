@@ -1,0 +1,400 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ARrowofTime
+
+//@version=5
+indicator("FREEMAN FINAL", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500) 
+
+//---------- INPUTS
+// => Alert Conditions
+var string t00_01           = "Alert Conditions"
+var string t00__01          = "Bearish Alert Active"
+var string t00__02          = ""
+var string t00__03          = "Bullish Alert Active"
+var string t00__04          = ""
+var string t00__05          = "Bearish All Create Alert Active"
+var string t00__06          = ""
+var string t00__07          = "Bearish Overlap Create Alert Active"
+var string t00__08          = ""
+var string t00__09          = "Bullish All Create Alert Active"
+var string t00__10          = ""
+var string t00__11          = "Bullish Overlap Create Alert Active"
+var string t00__12          = ""
+var string t00__13          = "Trigger Line => "
+var string t00__14          = "Bearish"
+var string t00__15          = "Bullish"
+var string t00__16          = "Alert Type"
+var string t00__17          = "Break Type"
+var string t00__18          = "MA Condition Active"
+var string t00__19          = "MA TF Period"
+var string t00__20          = "MA Type"
+var string t00__21          = "MA Source"
+var string t00__22          = "MA Length"
+var string t00__23          = "MA 2nd Length"
+var string t00__24          = ""
+var string t00__25          = "MA 3rd Length"
+var string t00__26          = ""
+alertbearishACTIVEbInput    = input.bool        (group = t00_01, title = t00__01, inline = "1", defval = true)
+alertbearishTXTInput        = input.string      (group = t00_01, title = t00__02, inline = "1", defval = "Red box touched")
+alertbullishACTIVEbInput    = input.bool        (group = t00_01, title = t00__03, inline = "2", defval = true)
+alertbullishTXTInput        = input.string      (group = t00_01, title = t00__04, inline = "2", defval = "Green box touched")
+alertbrcreateACTIVEbInput   = input.bool        (group = t00_01, title = t00__05, inline = "3", defval = false)
+alertbrcreateTXTInput       = input.string      (group = t00_01, title = t00__06, inline = "3", defval = "Red box created")
+alertbrcreateolACTIVEbInput = input.bool        (group = t00_01, title = t00__07, inline = "4", defval = true)
+alertbrcreateolTXTInput     = input.string      (group = t00_01, title = t00__08, inline = "4", defval = "Red overlap box created")
+alertblcreateACTIVEbInput   = input.bool        (group = t00_01, title = t00__09, inline = "5", defval = false)
+alertblcreateTXTInput       = input.string      (group = t00_01, title = t00__10, inline = "5", defval = "Green box created")
+alertblcreateolACTIVEbInput = input.bool        (group = t00_01, title = t00__11, inline = "6", defval = true)
+alertblcreateolTXTInput     = input.string      (group = t00_01, title = t00__12, inline = "6", defval = "Green overlap box created")
+alerttriggerLINEbInput      = input.bool        (group = t00_01, title = t00__13, inline = "7", defval = false)
+alertbearishCOLORInput      = input.color       (group = t00_01, title = t00__14, inline = "7", defval = color.red)
+alertbullishCOLORInput      = input.color       (group = t00_01, title = t00__15, inline = "7", defval = color.green)
+alertTYPEInput              = input.string      (group = t00_01, title = t00__16, inline = "",  defval = "1st Break", options = ["1st Break", "Every Break"])
+alertbreakTYPEInput         = input.string      (group = t00_01, title = t00__17, inline = "",  defval = "Touch", options = ["Touch", "Close"])
+alertmaACTIVEbInput         = input.string      (group = t00_01, title = t00__18, inline = "",  defval = "No", options = ["Yes", "No"])
+alertmaTFInput              = input.timeframe   (group = t00_01, title = t00__19, inline = "",  defval = "")
+alertmaTYPEInput            = input.string      (group = t00_01, title = t00__20, inline = "",  defval = "SMA", options = ["SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"])
+alertmaSOURCEInput          = input.source      (group = t00_01, title = t00__21, inline = "",  defval = close)
+alertmaLENGTHInput          = input.int         (group = t00_01, title = t00__22, inline = "",  defval = 50)
+alertma2NDbInput            = input.bool        (group = t00_01, title = t00__23, inline = "8", defval = true)
+alertma2NDLENGTHInput       = input.int         (group = t00_01, title = t00__24, inline = "8", defval = 25)
+alertma3RDbInput            = input.bool        (group = t00_01, title = t00__25, inline = "9", defval = true)
+alertma3rdLENGTHInput       = input.int         (group = t00_01, title = t00__26, inline = "9", defval = 100)
+
+// => Settings
+var string t01_01           = "Settings"
+var string t01__01          = "Start Time"
+var string t01__02          = "Timezone"
+var string t01__03          = "Display Day Session"
+var string t01__04          = "Bullish"
+var string t01__05          = "Bearish"
+var string t01__06          = "Final Check"
+var string t01__07          = ""
+var string t01__08          = ""
+var string t01__09          = "Session Check"
+var string t01__10          = "Box Range"
+var string t01__11          = ""
+var string t01__12          = ""
+var string t01__13          = "Mirror Boxes"
+settingTIMEInput            = input.time        (group = t01_01, title = t01__01, inline = "",  defval = timestamp("04 Oct 2000 19:00"))
+settingZONEInput            = input.string      (group = t01_01, title = t01__02, inline = "",  defval = "GMT-7")
+settingSESSIONbInput        = input.bool        (group = t01_01, title = t01__03, inline = "",  defval = false)
+settingBULLISHbInput        = input.bool        (group = t01_01, title = t01__04, inline = "",  defval = true)
+settingBEARISHbInput        = input.bool        (group = t01_01, title = t01__05, inline = "",  defval = true)
+settingFCHECKbInput         = input.bool        (group = t01_01, title = t01__06, inline = "1", defval = true)
+settingFNUMBERbInput        = input.int         (group = t01_01, title = t01__07, inline = "1", defval = 6, minval = 1)
+settingFTYPEbInput          = input.string      (group = t01_01, title = t01__08, inline = "1", defval = "One Bar", options = ["One Bar", "All Bar"])
+settingsessionCHECKbInput   = input.bool        (group = t01_01, title = t01__09, inline = "",  defval = true)
+settingRANGEbInput          = input.bool        (group = t01_01, title = t01__10, inline = "2", defval = true)
+settingrangeLOCInput        = input.string      (group = t01_01, title = t01__11, inline = "2", defval = "Right", options = ["Left", "Middle", "Right"])
+settingrangeMULTInput       = input.float       (group = t01_01, title = t01__12, inline = "2", defval = 100)
+settingMIRbInput            = input.bool        (group = t01_01, title = t01__13, inline = "",  defval = false)
+
+// => Colors
+var string t02_01           = "Colors"
+var string t02__01          = "Bearish Boxes Color"
+var string t02__02          = "Bullish Boxes Color"
+var string t02__03          = "Session Color"
+var string t02__04          = "Mirror Bearish Boxes Color"
+var string t02__05          = "Mirror Bearish Boxes Border Color"
+var string t02__06          = "Mirror Bullish Boxes Color"
+var string t02__07          = "Mirror Bullish Boxes Border Color"
+colorbrBGInput              = input.color       (group = t02_01, title = t02__01, inline = "", defval = color.new(color.red, 85))
+colorblBGInput              = input.color       (group = t02_01, title = t02__02, inline = "", defval = color.new(color.green, 85))
+colorsessionBGInput         = input.color       (group = t02_01, title = t02__03, inline = "", defval = color.new(color.blue, 80))
+colorbrmirBGInput           = input.color       (group = t02_01, title = t02__04, inline = "", defval = color.new(color.red, 100))
+colorbrmirBORInput          = input.color       (group = t02_01, title = t02__05, inline = "", defval = color.new(color.white, 0))
+colorblmirBGInput           = input.color       (group = t02_01, title = t02__06, inline = "", defval = color.new(color.green, 100))
+colorblmirBORInput          = input.color       (group = t02_01, title = t02__07, inline = "", defval = color.new(color.white, 0))
+
+//---------- CALCULATIONS
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// => Functions
+// * MA
+ma(source, length, type) =>
+    switch type
+        "SMA" => ta.sma(source, length)
+        "EMA" => ta.ema(source, length)
+        "SMMA (RMA)" => ta.rma(source, length)
+        "WMA" => ta.wma(source, length)
+        "VWMA" => ta.vwma(source, length)
+
+// ** Nonrepainting Security
+nonRepaintingSecurity(sym, tf, src, gaps) =>
+    request.security(sym, tf, src[barstate.isrealtime ? 1 : 0], gaps = gaps == "gaps_on" ? barmerge.gaps_on : barmerge.gaps_off)[barstate.isrealtime ? 0 : 1]
+
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// => Sessions and MA
+// * Sessions
+var bool is_friday   = false
+
+bar_in_session  = true
+
+if dayofweek(time, settingZONEInput) == dayofweek.friday
+    is_friday := true
+
+if is_friday and dayofweek(time, settingZONEInput) != dayofweek.friday//settingsessionCHECKbInput and 
+    bar_in_session := false
+    is_friday := false
+else if (dayofweek(time, settingZONEInput) == dayofweek.saturday or dayofweek(time, settingZONEInput) == dayofweek.sunday)//settingsessionCHECKbInput and 
+    bar_in_session := false
+
+bgcolor(settingSESSIONbInput and bar_in_session and time >= settingTIMEInput ? colorsessionBGInput : na, title = "Session Color")
+
+// ** MA
+ma1st   = ma(alertmaSOURCEInput, alertmaLENGTHInput, alertmaTYPEInput)
+ma2nd   = ma(alertmaSOURCEInput, alertma2NDLENGTHInput, alertmaTYPEInput)
+ma3rd   = ma(alertmaSOURCEInput, alertma3rdLENGTHInput, alertmaTYPEInput)
+
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// => Bearish Boxes
+var box[]   brBox               = array.new<box>()
+var box[]   brMirBox            = array.new<box>()
+var int[]   brBoxAlertCond      = array.new<int>()
+var bool    brBoxDraw           = false
+var bool    brCheckCons         = false
+var bool    brCheck4thBar       = false
+var bool    brCheckFinal        = false
+var bool    brCheckConsLmt      = false
+var bool    brCheckSession      = false
+var float   brBoxTop            = na
+var int     brBoxTopIndex       = na
+var float   brBoxBtm            = na
+var int     brBoxBtmIndex       = na
+
+brBoxAlert      = false
+brBoxOverlap    = false      
+chartTF         = timeframe.period + (timeframe.period != "D" and timeframe.period != "W" and timeframe.period != "W" ? " min." : "")
+
+if time >= settingTIMEInput and settingBEARISHbInput
+    brCheckCons     := ((close[6] < open[6] or (close[6] == open[6] and close[7] < open[7])) and (close[5] < open[5] or (close[5] == open[5] and close[6] < open[6])) and (close[4] < open[4] or (close[4] == open[4] and close[5] < open[5]))) ? true : false
+    brCheck4thBar   := (close[3] < open[4] and close[2] < open[4] and close[1] < open[4]) ? true : false   
+    brCheckConsLmt  := brCheckCons and brCheck4thBar and brCheckCons[1] == false ? true : false
+    // Consecutive, 4thBar Check, Conscutive Limit is true
+    if brCheckCons and brCheck4thBar and brCheckConsLmt
+        brBoxDraw       := true
+        toprange        = 6
+        brBoxTop        := high[6]
+        brBoxTopIndex   := time[6]
+        brBoxBtm        := low[6]
+        brBoxBtmIndex   := time[6]
+        // Highest of Box from 1 to -4
+        for i = 7 to 10
+            if high[i] > brBoxTop
+                toprange        := i
+                brBoxTop        := high[i]
+                brBoxTopIndex   := time[i]
+        // Lowest of Box from Highest to 1
+        for i = 6 to toprange
+            if low[i] < brBoxBtm
+                brBoxBtm        := low[i]
+                brBoxBtmIndex   := time[i]
+        // Final Check Control
+        if settingFCHECKbInput
+            sessioncheck = true
+            // Session Check of Final Check
+            if settingsessionCHECKbInput
+                for i = (settingFTYPEbInput == "All Bar" ? 11 : 11 + settingFNUMBERbInput - 1) to (11 + settingFNUMBERbInput - 1)
+                    if bar_in_session[i] == false
+                        sessioncheck := false
+                        break
+            // Highest of Final Check Input Bar(-5 - Input) is higher than top of box, box won't be created
+            if sessioncheck and high[10 + settingFNUMBERbInput] > brBoxTop
+                brBoxDraw := false
+        // If bar is out of session, box wont created created
+        if settingsessionCHECKbInput
+            for i = 1 to 10
+                if bar_in_session[i] == false
+                    brBoxDraw := false
+                    break
+    // Drawing Box
+    if brBoxDraw
+        if array.size(brBox) > 0
+            for i = 0 to (array.size(brBox) - 1)
+                top = box.get_top(array.get(brBox, i))
+                btm = box.get_bottom(array.get(brBox, i))
+                if not ((brBoxTop > top and brBoxBtm > top) or (brBoxTop < btm and brBoxBtm < btm))
+                    brBoxOverlap := true
+                    break
+        txt = settingRANGEbInput ? str.tostring(math.abs((brBoxTop - brBoxBtm) * settingrangeMULTInput)) : ""
+        loc = settingrangeLOCInput == "Right" ? text.align_right : settingrangeLOCInput == "Left" ? text.align_left : text.align_center
+        array.unshift(brBox, box.new(brBoxTopIndex, brBoxTop, brBoxBtmIndex, brBoxBtm, xloc = xloc.bar_time, bgcolor = colorbrBGInput, text = txt, text_size = size.normal, text_color = color.red, text_halign = loc, border_color = color.new(colorbrBGInput, 100)))  
+        array.unshift(brBoxAlertCond, 0)    
+        if settingMIRbInput
+            array.unshift(brMirBox, box.new(brBoxTopIndex, brBoxBtm, time, brBoxBtm - (brBoxTop - brBoxBtm), xloc = xloc.bar_time, bgcolor = colorbrmirBGInput, border_color = colorbrmirBORInput, border_style = line.style_dotted))
+        brBoxDraw   := false
+        brBoxAlert  := true
+// After Box is created
+if array.size(brBox) != 0
+    for i = (array.size(brBox) - 1) to 0
+        box.set_right(array.get(brBox, i), time) // Location of Right of Box
+        if settingMIRbInput
+            box.set_right(array.get(brMirBox, i), time) // Location of Right of Box
+        // In Session
+        if bar_in_session == true
+            box_top     = box.get_top(array.get(brBox, i))
+            box_btm     = box.get_bottom(array.get(brBox, i))
+            crosso      = ((alertbreakTYPEInput == "Touch" ? high[1] : close[1]) < box_btm) and ((alertbreakTYPEInput == "Touch" ? high : close) >= box_btm) ? true : false
+            ma2ndcond   = alertma2NDbInput ? (ma2nd < ma1st ? true : false) : true
+            ma3rdcond   = alertma3RDbInput ? (ma3rd > ma1st ? true : false) : true
+            // Bearish Alert
+            if alertbearishACTIVEbInput == true and (alertbreakTYPEInput == "Touch" ? true : barstate.isconfirmed)
+                if alertTYPEInput == "1st Break" ? array.get(brBoxAlertCond, i) == 0 : true
+                    if crosso and (alertmaACTIVEbInput == "Yes" ? low < ma1st and box_btm < ma1st and ma2ndcond and ma3rdcond : true)
+                        array.set(brBoxAlertCond, i, 1)
+                        alert("🔴 " + alertbearishTXTInput + " - " + chartTF, alert.freq_once_per_bar)
+                        if alerttriggerLINEbInput
+                            line.new(time, low, time, low + syminfo.mintick, xloc = xloc.bar_time, extend = extend.both, color = alertbearishCOLORInput, width = 2)
+            // Box is broken and 
+            if high > box_top
+                array.remove(brBox, i)
+                array.remove(brBoxAlertCond, i)
+                if settingMIRbInput
+                    array.remove(brMirBox, i)
+        // Out Session
+        if bar_in_session == false
+            box.set_right(array.get(brBox, i), time[1])
+            array.remove(brBox, i)
+            array.remove(brBoxAlertCond, i)
+            if settingMIRbInput
+                box.set_right(array.get(brMirBox, i), time[1])
+                array.remove(brMirBox, i)
+
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// => Bullish Boxes
+var box[]   blBox               = array.new<box>()
+var box[]   blMirBox            = array.new<box>()
+var int[]   blBoxAlertCond      = array.new<int>()
+var bool    blBoxDraw           = false
+var bool    blCheckCons         = false
+var bool    blCheck4thBar       = false
+var bool    blCheckFinal        = false
+var bool    blCheckConsLmt      = false
+var bool    blCheckSession      = false
+var float   blBoxTop            = na
+var int     blBoxTopIndex       = na
+var float   blBoxBtm            = na
+var int     blBoxBtmIndex       = na
+
+blBoxAlert      = false
+blBoxOverlap    = false
+
+if time >= settingTIMEInput and settingBULLISHbInput
+    blCheckCons     := ((close[6] > open[6] or (close[6] == open[6] and close[7] > open[7])) and (close[5] > open[5] or (close[5] == open[5] and close[6] > open[6])) and (close[4] > open[4] or (close[4] == open[4] and close[5] > open[5]))) ? true : false
+    blCheck4thBar   := (close[3] > open[4] and close[2] > open[4] and close[1] > open[4]) ? true : false   
+    blCheckConsLmt  := blCheckCons and blCheck4thBar and blCheckCons[1] == false ? true : false
+    // Consecutive, 4thBar Check, Conscutive Limit is true
+    if blCheckCons and blCheck4thBar and blCheckConsLmt
+        blBoxDraw       := true
+        btmrange        = 6
+        blBoxTop        := high[6]
+        blBoxTopIndex   := time[6]
+        blBoxBtm        := low[6]
+        blBoxBtmIndex   := time[6]
+        // Lowest of Box from 1 to -4
+        for i = 7 to 10
+            if low[i] < blBoxBtm
+                btmrange        := i
+                blBoxBtm        := low[i]
+                blBoxBtmIndex   := time[i]
+        // Highest of Box from Lowest to 1
+        for i = 6 to btmrange
+            if high[i] > blBoxTop
+                blBoxTop        := high[i]
+                blBoxTopIndex   := time[i]
+        // Final Check Control
+        if settingFCHECKbInput
+            sessioncheck = true
+            // Session Check of Final Check
+            if settingsessionCHECKbInput
+                for i = (settingFTYPEbInput == "All Bar" ? 11 : 11 + settingFNUMBERbInput - 1) to (11 + settingFNUMBERbInput - 1)
+                    if bar_in_session[i] == false
+                        sessioncheck := false
+                        break
+            // Lowest of Final Check Input Bar(-5 - Input) is lower than bottom of box, box won't be created
+            if sessioncheck and low[10 + settingFNUMBERbInput] < blBoxBtm
+                blBoxDraw := false
+        // If bar is out of session, box wont created created
+        if settingsessionCHECKbInput
+            for i = 1 to 10
+                if bar_in_session[i] == false
+                    blBoxDraw := false
+                    break
+    // Drawing Box
+    if blBoxDraw
+        if array.size(blBox) > 0
+            for i = 0 to (array.size(blBox) - 1)
+                top = box.get_top(array.get(blBox, i))
+                btm = box.get_bottom(array.get(blBox, i))
+                if not ((blBoxTop > top and blBoxBtm > top) or (blBoxTop < btm and blBoxBtm < btm))
+                    blBoxOverlap := true
+                    break
+        txt = settingRANGEbInput ? str.tostring(math.abs((blBoxTop - blBoxBtm) * settingrangeMULTInput)) : ""
+        loc = settingrangeLOCInput == "Right" ? text.align_right : settingrangeLOCInput == "Left" ? text.align_left : text.align_center
+        array.unshift(blBox, box.new(blBoxBtmIndex, blBoxTop, blBoxTopIndex, blBoxBtm, xloc = xloc.bar_time, bgcolor = colorblBGInput,  text = txt, text_size = size.normal, text_color = color.green, text_halign = loc, border_color = color.new(colorblBGInput, 100)))  
+        array.unshift(blBoxAlertCond, 0)    
+        if settingMIRbInput
+            array.unshift(blMirBox, box.new(blBoxBtmIndex, blBoxTop + (blBoxTop - blBoxBtm), time, blBoxTop, xloc = xloc.bar_time, bgcolor = colorblmirBGInput, border_color = colorblmirBORInput, border_style = line.style_dotted))
+        blBoxDraw   := false
+        blBoxAlert  := true
+// After Box is created
+if array.size(blBox) != 0
+    for i = (array.size(blBox) - 1) to 0
+        box.set_right(array.get(blBox, i), time) // Location of Right of Box
+        if settingMIRbInput
+            box.set_right(array.get(blMirBox, i), time) // Location of Right of Box
+        // In Session
+        if bar_in_session == true
+            box_top     = box.get_top(array.get(blBox, i))
+            box_btm     = box.get_bottom(array.get(blBox, i))
+            crossu      = ((alertbreakTYPEInput == "Touch" ? low[1] : close[1]) > box_top) and ((alertbreakTYPEInput == "Touch" ? low : close) <= box_top) ? true : false
+            ma2ndcond   = alertma2NDbInput ? (ma2nd > ma1st ? true : false) : true
+            ma3rdcond   = alertma3RDbInput ? (ma3rd < ma1st ? true : false) : true
+            // Bullish Alert
+            if alertbullishACTIVEbInput == true and (alertbreakTYPEInput == "Touch" ? true : barstate.isconfirmed)
+                if alertTYPEInput == "1st Break" ? array.get(blBoxAlertCond, i) == 0 : true
+                    if crossu and (alertmaACTIVEbInput == "Yes" ? high > ma1st and box_top > ma1st and ma2ndcond and ma3rdcond : true)
+                        array.set(blBoxAlertCond, i, 1)
+                        alert("🟢 " + alertbullishTXTInput + " - " + chartTF, alert.freq_once_per_bar)
+                        if alerttriggerLINEbInput
+                            line.new(bar_index, low, bar_index, low + syminfo.mintick, extend = extend.both, color = alertbullishCOLORInput, width = 2)
+            // Box is broken and 
+            if low < box_btm
+                array.remove(blBox, i)
+                array.remove(blBoxAlertCond, i)
+                if settingMIRbInput
+                    array.remove(blMirBox, i)
+        // Out Session
+        if bar_in_session == false
+            box.set_right(array.get(blBox, i), time[1])
+            array.remove(blBox, i)
+            array.remove(blBoxAlertCond, i)
+            if settingMIRbInput
+                box.set_right(array.get(blMirBox, i), time[1])
+                array.remove(blMirBox, i)
+
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// * * * * * *
+// => Alerts
+if brBoxAlert and alertbrcreateACTIVEbInput
+    alert(alertbrcreateTXTInput + " - " + chartTF, alert.freq_once_per_bar_close)
+if blBoxAlert and alertblcreateACTIVEbInput
+    alert(alertblcreateTXTInput + " - " + chartTF, alert.freq_once_per_bar_close)
+
+if brBoxOverlap and alertbrcreateolACTIVEbInput
+    alert(alertbrcreateolTXTInput + " - " + chartTF, alert.freq_once_per_bar_close)
+if blBoxOverlap and alertblcreateolACTIVEbInput
+    alert(alertblcreateolTXTInput + " - " + chartTF, alert.freq_once_per_bar_close)
